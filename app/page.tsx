@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Todo = {
   id: string;
@@ -105,6 +105,14 @@ const formatWeekRangeLabel = (weekId: string) => {
   return `${start}〜${end}`;
 };
 
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 export default function Home() {
   const { monday, sunday } = useMemo(() => getWeekRange(new Date()), []);
   const currentWeekId = useMemo(
@@ -120,12 +128,22 @@ export default function Home() {
   const [storedWeeks, setStoredWeeks] = useState<string[]>(() =>
     listStoredWeeks(),
   );
+  const [isHydrated, setIsHydrated] = useState(false);
   const [notionText, setNotionText] = useState<string>("");
   const [copyStatus, setCopyStatus] = useState<string>("");
   const [newTodoTexts, setNewTodoTexts] = useState<Record<string, string>>({});
 
   const isCurrentWeek = selectedWeekId === currentWeekId;
   const isReadOnly = !isCurrentWeek;
+
+  useEffect(() => {
+    // eslint-disable-next-line
+    setIsHydrated(true);
+    const defaultWeek = buildDefaultWeek(monday);
+    const data = loadWeekData(selectedWeekId, defaultWeek);
+    setWeekData(data);
+    setStoredWeeks(listStoredWeeks());
+  }, [monday, selectedWeekId]);
 
   const updateWeekData = (updater: (prev: WeekData) => WeekData) => {
     if (!isCurrentWeek) return;
@@ -139,9 +157,6 @@ export default function Home() {
 
   const handleSelectWeek = (weekId: string) => {
     setSelectedWeekId(weekId);
-    const defaultWeek = buildDefaultWeek(monday);
-    const data = loadWeekData(weekId, defaultWeek);
-    setWeekData(data);
   };
 
   const handleSummaryChange = (value: string) => {
@@ -210,39 +225,91 @@ export default function Home() {
   };
 
   const generateNotionText = (data: WeekData) => {
-    const summaryLine = `${formatDisplayDate(monday)}〜：${data.weekSummary}`;
+    const weekTitle = `${formatDisplayDate(monday)}〜${formatDisplayDate(
+      sunday,
+    )}：${data.weekSummary}`;
     const dayBlocks = data.days
       .map((day) => {
         if (day.todos.length === 0) return "";
         const date = new Date(`${day.date}T00:00:00`);
-        const header = `**${formatDisplayDate(date)}｜${day.label}**`;
+        const header = `  > ${formatDisplayDate(date)}｜${day.label}`;
         const tasks = day.todos
-          .map((todo) => `    - [${todo.done ? "x" : " "}] ${todo.text}`)
+          .map((todo) => `    * [${todo.done ? "x" : " "}] ${todo.text}`)
           .join("\n");
         return `${header}\n${tasks}`;
       })
       .filter(Boolean);
     if (dayBlocks.length === 0) {
-      return summaryLine;
+      return `> ${weekTitle}`;
     }
-    return `${summaryLine}\n\n${dayBlocks.join("\n\n---\n\n")}`;
+    return `> ${weekTitle}\n${dayBlocks.join("\n\n")}`;
+  };
+
+  const generateNotionHtml = (data: WeekData) => {
+    const weekTitle = `${formatDisplayDate(monday)}〜${formatDisplayDate(
+      sunday,
+    )}：${data.weekSummary}`;
+    const dayBlocks = data.days
+      .map((day) => {
+        if (day.todos.length === 0) return "";
+        const date = new Date(`${day.date}T00:00:00`);
+        const header = `${formatDisplayDate(date)}｜${day.label}`;
+        const tasks = day.todos
+          .map((todo) => {
+            const checked = todo.done ? " checked" : "";
+            return `<li><input type="checkbox"${checked} /> ${escapeHtml(
+              todo.text,
+            )}</li>`;
+          })
+          .join("");
+        return `<details open><summary>${escapeHtml(
+          header,
+        )}</summary><ul>${tasks}</ul></details>`;
+      })
+      .filter(Boolean)
+      .join("");
+    return `<details open><summary>${escapeHtml(
+      weekTitle,
+    )}</summary>${dayBlocks}</details>`;
   };
 
   const handleGenerateNotion = async () => {
     if (!isCurrentWeek) return;
     const text = generateNotionText(weekData);
+    const html = generateNotionHtml(weekData);
     setNotionText(text);
     if (typeof navigator === "undefined" || !navigator.clipboard) {
       setCopyStatus("コピーに失敗しました。");
       return;
     }
     try {
-      await navigator.clipboard.writeText(text);
+      if (typeof ClipboardItem !== "undefined") {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/plain": new Blob([text], { type: "text/plain" }),
+            "text/html": new Blob([html], { type: "text/html" }),
+          }),
+        ]);
+      } else {
+        await navigator.clipboard.writeText(text);
+      }
       setCopyStatus("クリップボードにコピーしました。");
     } catch {
       setCopyStatus("コピーに失敗しました。");
     }
   };
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-zinc-50 px-4 py-8 text-zinc-900">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+            <p className="text-sm text-zinc-500">読み込み中...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 px-4 py-8 text-zinc-900">
