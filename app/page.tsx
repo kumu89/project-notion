@@ -143,6 +143,7 @@ export default function Home() {
     const data = loadWeekData(selectedWeekId, defaultWeek);
     setWeekData(data);
     setStoredWeeks(listStoredWeeks());
+    setNewTodoTexts({});
   }, [monday, selectedWeekId]);
 
   const updateWeekData = (updater: (prev: WeekData) => WeekData) => {
