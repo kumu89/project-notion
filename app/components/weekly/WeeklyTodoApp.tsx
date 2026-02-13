@@ -60,7 +60,7 @@ const WeekHeader = ({
             <p className="text-sm font-semibold text-zinc-500">今週の範囲</p>
             <h1 className="text-2xl font-semibold">{weekRangeLabel}</h1>
           </div>
-          <div className="flex flex-wrap gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
             <button
               type="button"
               onClick={onBackToCurrent}
@@ -73,12 +73,12 @@ const WeekHeader = ({
               <button
                 type="button"
                 onClick={onToggleCalendar}
-                className="rounded-full border border-zinc-300 bg-white px-4 py-2 font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900"
+                className="ml-auto rounded-full border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900"
               >
                 日付から週を選ぶ
               </button>
               {isCalendarOpen && (
-                <div className="absolute right-0 top-12 z-10 w-72 rounded-xl border border-zinc-200 bg-white p-4 shadow-lg">
+                <div className="absolute right-0 top-12 z-10 w-lg rounded-2xl border border-zinc-200 bg-white p-6 shadow-lg">
                   <p className="text-xs font-semibold text-zinc-500">
                     日付を選ぶと、その週を表示します
                   </p>
@@ -88,7 +88,7 @@ const WeekHeader = ({
                     onChange={(event) => onCalendarChange(event.target.value)}
                     onClick={handleDatePickerOpen}
                     onFocus={handleDatePickerOpen}
-                    className="mt-3 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-zinc-600"
+                    className="mt-4 w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base outline-none transition focus:border-zinc-600"
                   />
                 </div>
               )}
