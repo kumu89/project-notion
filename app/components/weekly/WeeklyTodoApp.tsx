@@ -82,14 +82,43 @@ const WeekHeader = ({
                   <p className="text-xs font-semibold text-zinc-500">
                     日付を選ぶと、その週を表示します
                   </p>
-                  <input
-                    type="date"
-                    value={calendarDate}
-                    onChange={(event) => onCalendarChange(event.target.value)}
-                    onClick={handleDatePickerOpen}
-                    onFocus={handleDatePickerOpen}
-                    className="mt-4 w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 text-base outline-none transition focus:border-zinc-600"
-                  />
+                  <div className="mt-3 flex w-full items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none transition focus-within:border-zinc-600">
+                    <input
+                      type="date"
+                      value={calendarDate}
+                      onChange={(event) => onCalendarChange(event.target.value)}
+                      onClick={handleDatePickerOpen}
+                      onFocus={handleDatePickerOpen}
+                      className="w-full bg-transparent text-sm outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        const target = event.currentTarget
+                          .previousElementSibling as HTMLInputElement | null;
+                        if (target) {
+                          target.focus();
+                          if (typeof target.showPicker === "function") {
+                            target.showPicker();
+                          }
+                        }
+                      }}
+                      className="rounded-md p-1 text-zinc-500 transition hover:text-zinc-800"
+                      aria-label="カレンダーを開く"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        className="h-4 w-4"
+                      >
+                        <path
+                          fill="currentColor"
+                          d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V3a1 1 0 0 1 1-1Zm12 8H5v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8ZM6 6v2h12V6H6Z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
