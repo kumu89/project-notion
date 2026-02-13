@@ -201,7 +201,10 @@ const DayCard = ({
             value={newTodoText}
             onChange={(event) => onTodoTextChange(day.date, event.target.value)}
             onKeyDown={(event) => {
-              if (event.key === "Enter") {
+              if (
+                event.key === "Enter" &&
+                !event.nativeEvent.isComposing
+              ) {
                 event.preventDefault();
                 onAddTodo(day.date);
               }
