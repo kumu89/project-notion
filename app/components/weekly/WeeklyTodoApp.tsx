@@ -209,7 +209,11 @@ const DayCard = ({
             onCompositionStart={onTodoCompositionStart}
             onCompositionEnd={onTodoCompositionEnd}
             onKeyDown={(event) => {
-              if (event.key === "Enter" && !isComposing) {
+              const isImeComposing =
+                isComposing ||
+                event.nativeEvent.isComposing ||
+                event.keyCode === 229;
+              if (event.key === "Enter" && !isImeComposing) {
                 event.preventDefault();
                 onAddTodo(day.date);
               }
