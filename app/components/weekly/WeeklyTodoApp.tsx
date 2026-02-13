@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { DayData, Todo, WeekData } from "./utils";
 import {
   buildDefaultWeek,
+  formatDate,
   formatDisplayDate,
   formatWeekRangeLabel,
   generateNotionHtml,
@@ -20,8 +21,12 @@ type WeekHeaderProps = {
   weekSummary: string;
   isCurrentWeek: boolean;
   isReadOnly: boolean;
+  isCalendarOpen: boolean;
+  calendarDate: string;
   onBackToCurrent: () => void;
   onGenerateNotion: () => void;
+  onToggleCalendar: () => void;
+  onCalendarChange: (value: string) => void;
   onSummaryChange: (value: string) => void;
 };
 
@@ -30,51 +35,92 @@ const WeekHeader = ({
   weekSummary,
   isCurrentWeek,
   isReadOnly,
+  isCalendarOpen,
+  calendarDate,
   onBackToCurrent,
   onGenerateNotion,
+  onToggleCalendar,
+  onCalendarChange,
   onSummaryChange,
-}: WeekHeaderProps) => (
-  <header className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-zinc-500">今週の範囲</p>
-          <h1 className="text-2xl font-semibold">{weekRangeLabel}</h1>
-        </div>
-        <div className="flex flex-wrap gap-2 text-sm">
-          <button
-            type="button"
-            onClick={onBackToCurrent}
-            className="rounded-full border border-zinc-300 px-4 py-2 font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={isCurrentWeek}
-          >
-            今週に戻る
-          </button>
-          <button
-            type="button"
-            onClick={onGenerateNotion}
-            disabled={!isCurrentWeek}
-            className="rounded-full bg-zinc-900 px-4 py-2 font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-300"
-          >
-            Notion用テキスト生成
-          </button>
-        </div>
-      </div>
+}: WeekHeaderProps) => {
+  const handleDatePickerOpen = (
+    event: React.MouseEvent<HTMLInputElement> | React.FocusEvent<HTMLInputElement>,
+  ) => {
+    const input = event.currentTarget;
+    if (typeof input.showPicker === "function") {
+      input.showPicker();
+    }
+  };
 
-      <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-        <label className="text-sm font-semibold text-zinc-500">週サマリー</label>
-        <input
-          type="text"
-          value={weekSummary}
-          onChange={(event) => onSummaryChange(event.target.value)}
-          disabled={isReadOnly}
-          placeholder="今週のフォーカスやテーマ"
-          className="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-zinc-600 disabled:bg-zinc-100"
-        />
+  return (
+    <header className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-zinc-500">今週の範囲</p>
+            <h1 className="text-2xl font-semibold">{weekRangeLabel}</h1>
+          </div>
+          <div className="flex flex-wrap gap-2 text-sm">
+            <button
+              type="button"
+              onClick={onBackToCurrent}
+              className="rounded-full border border-zinc-300 px-4 py-2 font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={isCurrentWeek}
+            >
+              今週に戻る
+            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={onToggleCalendar}
+                className="rounded-full border border-zinc-300 bg-white px-4 py-2 font-medium text-zinc-700 transition hover:border-zinc-400 hover:text-zinc-900"
+              >
+                日付から週を選ぶ
+              </button>
+              {isCalendarOpen && (
+                <div className="absolute right-0 top-12 z-10 w-72 rounded-xl border border-zinc-200 bg-white p-4 shadow-lg">
+                  <p className="text-xs font-semibold text-zinc-500">
+                    日付を選ぶと、その週を表示します
+                  </p>
+                  <input
+                    type="date"
+                    value={calendarDate}
+                    onChange={(event) => onCalendarChange(event.target.value)}
+                    onClick={handleDatePickerOpen}
+                    onFocus={handleDatePickerOpen}
+                    className="mt-3 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-zinc-600"
+                  />
+                </div>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={onGenerateNotion}
+              disabled={!isCurrentWeek}
+              className="rounded-full bg-zinc-900 px-4 py-2 font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-300"
+            >
+              Notion用テキスト生成
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+          <label className="text-sm font-semibold text-zinc-500">
+            週サマリー
+          </label>
+          <input
+            type="text"
+            value={weekSummary}
+            onChange={(event) => onSummaryChange(event.target.value)}
+            disabled={isReadOnly}
+            placeholder="今週のフォーカスやテーマ"
+            className="mt-2 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-zinc-600 disabled:bg-zinc-100"
+          />
+        </div>
       </div>
-    </div>
-  </header>
-);
+    </header>
+  );
+};
 
 type StoredWeeksListProps = {
   storedWeeks: string[];
@@ -260,6 +306,18 @@ export default function WeeklyTodoApp() {
   const [notionText, setNotionText] = useState<string>("");
   const [copyStatus, setCopyStatus] = useState<string>("");
   const [newTodoTexts, setNewTodoTexts] = useState<Record<string, string>>({});
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [calendarDate, setCalendarDate] = useState(() => formatDate(new Date()));
+  const selectedWeekStart = useMemo(() => {
+    const [start] = selectedWeekId.split("~");
+    if (start) {
+      const parsed = new Date(`${start}T00:00:00`);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed;
+      }
+    }
+    return monday;
+  }, [selectedWeekId, monday]);
 
   const isCurrentWeek = selectedWeekId === currentWeekId;
   const isReadOnly = !isCurrentWeek;
@@ -281,6 +339,7 @@ export default function WeeklyTodoApp() {
       const nextRange = getWeekRange(nextDate);
       const nextWeekId = getWeekId(nextRange.monday, nextRange.sunday);
       setBaseDate(nextDate);
+      setCalendarDate(formatDate(nextDate));
       setSelectedWeekId((prev) =>
         prev === previousCurrentWeekId.current ? nextWeekId : prev,
       );
@@ -293,12 +352,13 @@ export default function WeeklyTodoApp() {
   useEffect(() => {
     // eslint-disable-next-line
     setIsHydrated(true);
-    const defaultWeek = buildDefaultWeek(monday);
+    const defaultWeek = buildDefaultWeek(selectedWeekStart);
     const data = loadWeekData(selectedWeekId, defaultWeek);
     setWeekData(data);
     setStoredWeeks(listStoredWeeks());
     setNewTodoTexts({});
-  }, [monday, selectedWeekId]);
+    setCalendarDate(formatDate(selectedWeekStart));
+  }, [monday, selectedWeekId, selectedWeekStart]);
 
   const updateWeekData = (updater: (prev: WeekData) => WeekData) => {
     if (!isCurrentWeek) return;
@@ -313,6 +373,17 @@ export default function WeeklyTodoApp() {
   const handleSummaryChange = (value: string) => {
     if (isReadOnly) return;
     updateWeekData((prev) => ({ ...prev, weekSummary: value }));
+  };
+
+  const handleCalendarChange = (value: string) => {
+    setCalendarDate(value);
+    if (!value) return;
+    const selectedDate = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(selectedDate.getTime())) return;
+    const range = getWeekRange(selectedDate);
+    const weekId = getWeekId(range.monday, range.sunday);
+    setSelectedWeekId(weekId);
+    setIsCalendarOpen(false);
   };
 
   const handleLabelChange = (date: string, value: string) => {
@@ -421,8 +492,12 @@ export default function WeeklyTodoApp() {
           weekSummary={weekData.weekSummary}
           isCurrentWeek={isCurrentWeek}
           isReadOnly={isReadOnly}
+          isCalendarOpen={isCalendarOpen}
+          calendarDate={calendarDate}
           onBackToCurrent={() => setSelectedWeekId(currentWeekId)}
           onGenerateNotion={handleGenerateNotion}
+          onToggleCalendar={() => setIsCalendarOpen((prev) => !prev)}
+          onCalendarChange={handleCalendarChange}
           onSummaryChange={handleSummaryChange}
         />
 
