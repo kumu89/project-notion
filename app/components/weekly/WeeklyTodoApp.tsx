@@ -125,8 +125,7 @@ const WeekHeader = ({
             <button
               type="button"
               onClick={onGenerateNotion}
-              disabled={!isCurrentWeek}
-              className="rounded-full bg-zinc-900 px-4 py-2 font-medium text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-300"
+              className="rounded-full bg-zinc-900 px-4 py-2 font-medium text-white transition hover:bg-zinc-700"
             >
               Notion用テキスト生成
             </button>
@@ -362,7 +361,7 @@ export default function WeeklyTodoApp() {
   }, [selectedWeekId, monday]);
 
   const isCurrentWeek = selectedWeekId === currentWeekId;
-  const isReadOnly = !isCurrentWeek;
+  const isReadOnly = false;
 
   useEffect(() => {
     const now = new Date();
@@ -403,10 +402,9 @@ export default function WeeklyTodoApp() {
   }, [monday, selectedWeekId, selectedWeekStart]);
 
   const updateWeekData = (updater: (prev: WeekData) => WeekData) => {
-    if (!isCurrentWeek) return;
     setWeekData((prev) => {
       const next = updater(prev);
-      saveWeekData(currentWeekId, next);
+      saveWeekData(selectedWeekId, next);
       setStoredWeeks(listStoredWeeks());
       return next;
     });
