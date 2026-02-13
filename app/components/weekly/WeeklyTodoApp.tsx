@@ -162,8 +162,11 @@ type DayCardProps = {
   displayDate: string;
   newTodoText: string;
   isReadOnly: boolean;
+  isComposing: boolean;
   onLabelChange: (date: string, value: string) => void;
   onTodoTextChange: (date: string, value: string) => void;
+  onTodoCompositionStart: () => void;
+  onTodoCompositionEnd: () => void;
   onAddTodo: (date: string) => void;
   onToggleTodo: (date: string, todoId: string) => void;
   onDeleteTodo: (date: string, todoId: string) => void;
@@ -174,8 +177,11 @@ const DayCard = ({
   displayDate,
   newTodoText,
   isReadOnly,
+  isComposing,
   onLabelChange,
   onTodoTextChange,
+  onTodoCompositionStart,
+  onTodoCompositionEnd,
   onAddTodo,
   onToggleTodo,
   onDeleteTodo,
@@ -200,11 +206,10 @@ const DayCard = ({
             type="text"
             value={newTodoText}
             onChange={(event) => onTodoTextChange(day.date, event.target.value)}
+            onCompositionStart={onTodoCompositionStart}
+            onCompositionEnd={onTodoCompositionEnd}
             onKeyDown={(event) => {
-              if (
-                event.key === "Enter" &&
-                !event.nativeEvent.isComposing
-              ) {
+              if (event.key === "Enter" && !isComposing) {
                 event.preventDefault();
                 onAddTodo(day.date);
               }
@@ -309,6 +314,7 @@ export default function WeeklyTodoApp() {
   const [notionText, setNotionText] = useState<string>("");
   const [copyStatus, setCopyStatus] = useState<string>("");
   const [newTodoTexts, setNewTodoTexts] = useState<Record<string, string>>({});
+  const [isComposing, setIsComposing] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [calendarDate, setCalendarDate] = useState(() => formatDate(new Date()));
   const selectedWeekStart = useMemo(() => {
@@ -521,6 +527,7 @@ export default function WeeklyTodoApp() {
                 displayDate={displayDate}
                 newTodoText={newTodoTexts[day.date] || ""}
                 isReadOnly={isReadOnly}
+                isComposing={isComposing}
                 onLabelChange={handleLabelChange}
                 onTodoTextChange={(dayDate, value) =>
                   setNewTodoTexts((prev) => ({
@@ -528,6 +535,8 @@ export default function WeeklyTodoApp() {
                     [dayDate]: value,
                   }))
                 }
+                onTodoCompositionStart={() => setIsComposing(true)}
+                onTodoCompositionEnd={() => setIsComposing(false)}
                 onAddTodo={handleAddTodo}
                 onToggleTodo={handleToggleTodo}
                 onDeleteTodo={handleDeleteTodo}
