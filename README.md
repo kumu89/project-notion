@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# タイトル
+- **アプリ名**: Project Notion（週次タスク整理ツール）
+- **1行説明**: 週サマリーと日別TODOを整理し、Notion貼り付け用テキスト/HTMLを生成できる個人向けWebアプリ
 
-## Getting Started
+# 概要
+- **このアプリが何をするものか**: 週単位でタスクと日別メモを整理し、Notionに貼り付けやすい形式で出力できるアプリです。
+- **どのような課題を解決するために作ったか**: 自分の週次タスク整理とNotion運用の手間を減らすために作成しました。
+- **想定ユーザー**: 週単位で予定やタスクを整理したい個人。Notionで週次記録をまとめている人（**推測**: Notion向け出力機能を実装しているため）。
+- **現在の完成状況**: 主要機能は実装済み。データはブラウザのlocalStorageに保存され、サーバー連携はありません。
 
-First, run the development server:
+# 主な機能
+- 週単位のタスク管理（週範囲の表示・週切替）
+- 週サマリー入力
+- 日別ラベル入力
+- 日別TODOの追加・完了切替・削除
+- 保存済み週の一覧表示・切替
+- Notion向けテキスト/HTML生成
+- クリップボードコピー（テキスト/HTML）
+- カレンダー日付選択から任意週へジャンプ
 
+# 技術スタック
+- **フロントエンド**: Next.js / React / TypeScript
+- **スタイリング**: Tailwind CSS
+- **データ保存**: localStorage（`weeklyTodo:` プレフィックスで週データを保存）
+
+# 設計・実装のポイント
+- **週単位のデータ設計**: 週サマリー + 7日分のラベルとTODOの配列で構成。
+- **localStorageによる保存**: 週ID（`YYYY-MM-DD~YYYY-MM-DD`）をキーに保存し、保存済み週一覧を復元。
+- **Notion貼り付け向け出力**: プレーンテキストとHTMLの両方を生成。チェックボックスHTMLを含めて貼り付け後の可読性を担保。
+- **週ID/日付計算**: 任意日付から「月曜〜日曜」の週範囲を算出し、週IDを作成。
+- **UX上の工夫**: IME入力中のEnter送信を防止し、誤追加を回避。
+
+# 工夫した点
+- 週の切り替えや保存済み週の一覧表示をlocalStorageのキー一覧から構築し、軽量に運用できるようにした
+- Notion貼り付け時に破綻しないよう、HTML生成時にエスケープ処理を実装
+- クリップボードAPIの対応差を考慮し、`ClipboardItem`が無い環境はテキストコピーへフォールバック
+- 日付変更（深夜）で週が切り替わるタイミングを考慮した更新処理を実装
+
+# 今後の改善案
+- スマホ向けのUI最適化（カードや入力欄の可読性向上）
+- 週データのエクスポート/インポート（JSONなど）
+- 並び順や表示密度のカスタマイズ
+
+# 使い方
+1. 週サマリーと各日のラベル・TODOを入力
+2. 「Notion用テキスト生成」をクリック
+3. クリップボードにコピーされた内容をNotionに貼り付け
+4. 保存済みの週は一覧から切り替え可能
+
+# セットアップ
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```bash
+npm run build
+npm run start
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# 補足
+- 本アプリはサーバー連携を行わず、入力内容はブラウザのlocalStorageに保存されます。
+- Notion連携はAPIではなく、生成したテキスト/HTMLを貼り付ける方式です。
